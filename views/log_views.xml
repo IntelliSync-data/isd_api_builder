@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Log Tree View -->
+        <record id="view_extapi_log_tree" model="ir.ui.view">
+            <field name="name">extapi.log.tree</field>
+            <field name="model">extapi.log</field>
+            <field name="arch" type="xml">
+                <list string="API Request Logs" create="false" edit="false" default_order="create_date desc">
+                    <field name="create_date" string="Timestamp"/>
+                    <field name="endpoint_id"/>
+                    <field name="route"/>
+                    <field name="method" decoration-info="method == 'GET'" decoration-success="method == 'POST'"/>
+                    <field name="status_code"
+                           decoration-success="status_code &lt; 300"
+                           decoration-warning="status_code &gt;= 300 and status_code &lt; 400"
+                           decoration-danger="status_code &gt;= 400"/>
+                    <field name="duration_ms" string="Duration (ms)"/>
+                    <field name="error_message" optional="hide"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Log Form View -->
+        <record id="view_extapi_log_form" model="ir.ui.view">
+            <field name="name">extapi.log.form</field>
+            <field name="model">extapi.log</field>
+            <field name="arch" type="xml">
+                <form string="API Request Log" create="false" edit="false" delete="false">
+                    <sheet>
+                        <group>
+                            <group string="Request Info">
+                                <field name="create_date" string="Timestamp"/>
+                                <field name="endpoint_id"/>
+                                <field name="route"/>
+                                <field name="method"/>
+                            </group>
+                            <group string="Response Info">
+                                <field name="status_code"/>
+                                <field name="duration_ms"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Request Details" name="request">
+                                <group>
+                                    <group string="Metadata">
+                                        <field name="request_meta" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" nolabel="1"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <group string="Query Parameters">
+                                        <field name="query_params" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" nolabel="1"/>
+                                    </group>
+                                    <group string="Body Parameters">
+                                        <field name="body_params" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" nolabel="1"/>
+                                    </group>
+                                </group>
+                            </page>
+
+                            <page string="Response" name="response">
+                                <group>
+                                    <field name="response_preview" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" nolabel="1"/>
+                                </group>
+                            </page>
+
+                            <page string="Error" name="error" invisible="not error_message">
+                                <group>
+                                    <field name="error_message" nolabel="1"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Log Search View -->
+        <record id="view_extapi_log_search" model="ir.ui.view">
+            <field name="name">extapi.log.search</field>
+            <field name="model">extapi.log</field>
+            <field name="arch" type="xml">
+                <search string="Search API Logs">
+                    <field name="endpoint_id"/>
+                    <field name="route"/>
+                    <filter string="Success (2xx)" name="success" domain="[('status_code', '&lt;', 300)]"/>
+                    <filter string="Client Errors (4xx)" name="client_errors" domain="[('status_code', '&gt;=', 400), ('status_code', '&lt;', 500)]"/>
+                    <filter string="Server Errors (5xx)" name="server_errors" domain="[('status_code', '&gt;=', 500)]"/>
+                    <separator/>
+                    <filter string="Has Errors" name="has_errors" domain="[('error_message', '!=', False)]"/>
+                    <separator/>
+                    <filter string="GET" name="method_get" domain="[('method', '=', 'GET')]"/>
+                    <filter string="POST" name="method_post" domain="[('method', '=', 'POST')]"/>
+                    <separator/>
+                    <filter string="Today" name="today" domain="[('create_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                    <filter string="Last 7 Days" name="last_7_days" domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                    <filter string="Last 30 Days" name="last_30_days" domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_endpoint" string="Endpoint" context="{'group_by': 'endpoint_id'}"/>
+                        <filter name="group_by_method" string="Method" context="{'group_by': 'method'}"/>
+                        <filter name="group_by_status" string="Status Code" context="{'group_by': 'status_code'}"/>
+                        <filter name="group_by_date" string="Date" context="{'group_by': 'create_date:day'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Log Action -->
+        <record id="action_extapi_log" model="ir.actions.act_window">
+            <field name="name">API Request Logs</field>
+            <field name="res_model">extapi.log</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_last_7_days': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No API requests logged yet
+                </p>
+                <p>
+                    Request logs will appear here when API endpoints are called.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

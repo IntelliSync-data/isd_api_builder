@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ISD API Builder</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; }
+        h1 { color: #875A7B; }
+        h2 { color: #21b799; margin-top: 30px; }
+        .feature { background: #f9f9f9; padding: 15px; margin: 10px 0; border-left: 4px solid #875A7B; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        .badge { display: inline-block; padding: 3px 8px; background: #21b799; color: white; border-radius: 3px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 ISD API Builder for Odoo 18</h1>
+
+    <p><strong>Build powerful REST APIs connected to external PostgreSQL databases (AWS RDS/EC2) with ease!</strong></p>
+
+    <div class="feature">
+        <h3>✨ Key Features</h3>
+        <ul>
+            <li><strong>External Database Connection</strong> - Direct or SSH Tunnel to AWS/EC2 PostgreSQL</li>
+            <li><strong>Schema Browser</strong> - Explore tables, columns, and metadata</li>
+            <li><strong>API Builder</strong> - Create REST APIs with SQL or ORM mode</li>
+            <li><strong>API Testing</strong> - Built-in tester with cURL generation</li>
+            <li><strong>Authentication</strong> - Secure with API keys</li>
+            <li><strong>Request Logging</strong> - Monitor all API requests</li>
+        </ul>
+    </div>
+
+    <h2>📦 Installation</h2>
+    <p>Install required Python packages:</p>
+    <pre><code>pip install psycopg2-binary paramiko</code></pre>
+
+    <h2>🔧 Quick Start</h2>
+    <ol>
+        <li>Install the module from Apps</li>
+        <li>Go to <strong>External API → Configuration → Settings</strong></li>
+        <li>Configure your PostgreSQL connection</li>
+        <li>Click <strong>Test Connection</strong></li>
+        <li>Browse schemas and create APIs!</li>
+    </ol>
+
+    <h2>🎯 Use Cases</h2>
+    <div class="feature">
+        <strong>Mobile Apps</strong> - Provide REST APIs for mobile applications
+    </div>
+    <div class="feature">
+        <strong>Data Integration</strong> - Connect external systems to Odoo data
+    </div>
+    <div class="feature">
+        <strong>Analytics</strong> - Expose business intelligence data via APIs
+    </div>
+    <div class="feature">
+        <strong>IoT</strong> - Create endpoints for IoT devices
+    </div>
+
+    <h2>📚 Documentation</h2>
+    <p>Full documentation available in <code>README.md</code> file with examples for:</p>
+    <ul>
+        <li>Database connection setup (Direct & SSH Tunnel)</li>
+        <li>Creating SQL and ORM endpoints</li>
+        <li>API authentication and testing</li>
+        <li>cURL, Python, and JavaScript examples</li>
+    </ul>
+
+    <h2>🔒 Security</h2>
+    <p>
+        <span class="badge">SQL Injection Protected</span>
+        <span class="badge">API Key Auth</span>
+        <span class="badge">Access Control</span>
+        <span class="badge">Secure PEM Storage</span>
+    </p>
+
+    <h2>💼 Support</h2>
+    <p>Developed by <strong>IntelliSyncdata</strong></p>
+    <p>Website: <a href="https://intellisyncdata.com">https://intellisyncdata.com</a></p>
+</body>
+</html>

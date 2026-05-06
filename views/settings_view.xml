@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Settings Form View -->
+        <record id="view_extapi_config_settings" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.extapi</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form" position="inside">
+                    <app
+                        string="External API Builder"
+                        name="isd_api_builder"
+                        groups="isd_api_builder.group_extapi_admin">
+
+                        <block title="External Database Connection">
+                            <setting help="Enable connection to external PostgreSQL database">
+                                <field name="extdb_enable"/>
+                                <div class="text-muted">
+                                    Connect to AWS RDS, EC2, or any PostgreSQL database
+                                </div>
+                            </setting>
+                        </block>
+
+                        <block title="Connection Settings" invisible="not extdb_enable">
+                            <setting string="Connection Mode">
+                                <field name="db_conn_mode" widget="radio"/>
+                            </setting>
+
+                            <group>
+                                <group string="Database Settings">
+                                    <field name="db_host" placeholder="e.g., my-db.rds.amazonaws.com" required="extdb_enable"/>
+                                    <field name="db_port" required="extdb_enable"/>
+                                    <field name="db_name" placeholder="e.g., production_db" required="extdb_enable"/>
+                                    <field name="db_user" placeholder="Database username" required="extdb_enable"/>
+                                    <field name="db_password" password="True" placeholder="Database password" required="extdb_enable"/>
+                                    <field name="db_sslmode"/>
+                                </group>
+
+                                <group string="SSH Tunnel Settings" invisible="db_conn_mode != 'ssh_tunnel'">
+                                    <field name="ssh_host" placeholder="e.g., bastion.example.com" required="db_conn_mode == 'ssh_tunnel'"/>
+                                    <field name="ssh_port" required="db_conn_mode == 'ssh_tunnel'"/>
+                                    <field name="ssh_user" placeholder="SSH username" required="db_conn_mode == 'ssh_tunnel'"/>
+                                    <field name="ssh_pem_attachment_id"
+                                           context="{'default_res_model': 'res.config.settings'}"
+                                           required="db_conn_mode == 'ssh_tunnel'"/>
+                                </group>
+                            </group>
+
+                            <button
+                                name="action_test_connection"
+                                string="Test Connection"
+                                type="object"
+                                class="btn-primary"
+                                icon="fa-plug"/>
+                            <button
+                                name="action_refresh_schemas"
+                                string="Refresh All Schemas"
+                                type="object"
+                                class="btn-secondary"
+                                icon="fa-refresh"/>
+                        </block>
+
+                    </app>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,259 @@
+PROMPT — ODOO 18 ADDON: AWS PG CONNECTION + DB SCHEMA BROWSER + API BUILDER + TESTER
+
+Bạn là senior Odoo developer. Hãy tạo một module Odoo 18 (Community) hoàn chỉnh, cài vào là chạy được ngay, với 3 phần chính:
+	1.	Settings (kết nối PostgreSQL từ AWS/EC2 qua SSH tunnel nếu cần)
+	2.	Database Browser (duyệt bảng/cột/kiểu dữ liệu)
+	3.	API Builder (tạo endpoint động GET/POST/PATCH/DELETE với chế độ test)
+
+Công nghệ & tương thích
+	•	Odoo 18 Community, Python 3.10+
+	•	PostgreSQL (mặc định)
+	•	Cho phép kết nối tới DB PostgreSQL bên ngoài qua:
+	•	Kết nối trực tiếp (host/port/db/user/password/sslmode)
+	•	Hoặc SSH Tunnel tới EC2: dùng pem key upload, ubuntu@<EC2-DNS> để forward đến localhost:5432 từ máy EC2.
+	•	External deps (khai trong __manifest__ → external_dependencies['python']):
+	•	psycopg2-binary
+	•	paramiko
+	•	sshtunnel
+	•	Bảo mật: nhóm quyền riêng cho admin module. API có API Key ở header (ví dụ X-Api-Key), bắt buộc nếu endpoint đặt auth=api_key.
+
+⸻
+
+1) Settings (res.config.settings)
+
+Tạo màn hình Settings với nhóm “External DB (AWS/EC2)” có các trường:
+
+Kết nối cơ bản
+	•	extdb_enable (boolean) – bật/tắt tính năng kết nối ngoài
+	•	db_conn_mode (selection: direct, ssh_tunnel) – chế độ kết nối
+	•	db_host (char), db_port (int, default 5432), db_name (char)
+	•	db_user (char), db_password (password)
+	•	db_sslmode (selection: disable, require, verify-ca, verify-full; default require)
+
+SSH Tunnel (nếu chọn ssh_tunnel)
+	•	ssh_host (char) – ví dụ: ec2-18-139-xxx-xxx.ap-southeast-1.compute.amazonaws.com
+	•	ssh_port (int, default 22)
+	•	ssh_user (char, default ubuntu)
+	•	PEM key upload: ssh_pem_attachment_id (many2one ir.attachment, binary upload)
+	•	ssh_local_bind_port (int, optional; auto-chọn nếu trống)
+
+Hành vi & test
+	•	Nút “Test Connection”:
+	•	Nếu direct: thử connect PG trực tiếp.
+	•	Nếu ssh_tunnel: mở tunnel bằng sshtunnel + paramiko, sau đó connect PG qua localhost:forwarded_port.
+	•	Hiển thị kết quả OK/ERROR (raise nếu fail).
+	•	Lưu cấu hình vào ir.config_parameter.
+
+Kỹ thuật
+	•	Viết service helper: context manager mở/tắt ssh tunnel gọn gàng.
+	•	Không block Odoo workers: chỉ mở tunnel khi cần (test, duyệt schema, chạy API), xong đóng lại.
+	•	Timeout và xử lý lỗi rõ ràng (host unreachable, auth fail, ssl error…).
+
+⸻
+
+2) Database Browser (menu “External Database”)
+
+Chỉ hiển thị menu nếu extdb_enable=True và test connect OK.
+
+Tính năng
+	•	Trang Schema:
+	•	Bên trái: danh sách schemas (public…), tables.
+	•	Bên phải: bảng chi tiết columns cho table đang chọn:
+	•	column_name, data_type, is_nullable, default, primary_key, foreign_key (nếu có).
+	•	Dùng information_schema và pg_catalog (vd: information_schema.tables, information_schema.columns, pg_constraint…).
+	•	Nút Refresh Cache: cache schema (model extdb.schema.cache) để duyệt nhanh; TTL config 10 phút.
+	•	Search table/column (name contains).
+
+Kỹ thuật
+	•	Tạo service ExtDBClient:
+	•	list_tables(schema) → trả list
+	•	get_columns(schema, table) → trả metadata chi tiết
+	•	Tất cả query tới DB ngoài đều dùng 1 lớp client, quản lý tunnel/connection an toàn.
+
+⸻
+
+3) API Builder (menu “API Builder”)
+
+Cho phép user tạo API dựa trên thông tin DB đã cấu hình.
+
+Model extapi.endpoint
+	•	name (char, required)
+	•	active (boolean, default True)
+	•	route (char, required, unique, không có slash đầu/cuối tự chuẩn hóa; ví dụ sales/top)
+	•	method (selection: GET/POST/PATCH/DELETE)
+	•	description (text)
+	•	auth_mode (selection: none, api_key; default api_key)
+	•	enabled (boolean, default True)
+
+Cách lấy dữ liệu (hai mode)
+	•	mode (selection: sql, orm)
+	•	SQL mode:
+	•	sql_text (text) — dùng parameterized placeholders (%(name)s)
+	•	allowed_ops (selection: read_only, allow_write; default read_only)
+	•	param_schema_json (text) — JSON schema nhẹ mô tả input (query/body) → map vào params
+	•	ORM mode:
+	•	orm_model (char, vd: res.partner)
+	•	orm_domain_json (text) — JSON domain với placeholders (vd: [["country_id","=",":country_id"]])
+	•	orm_fields_json (text) — JSON list fields trả về (vd: ["name","email"])
+	•	orm_limit (int), orm_offset (int), order_by (char)
+
+Phản hồi & định dạng
+	•	response_mode (selection: json, raw)
+	•	paginate (boolean), page_size (int default 50)
+	•	extra_headers_json (text) – JSON các header trả về thêm
+	•	example_request_json (text) – ví dụ test
+	•	example_response_json (text) – ví dụ mong muốn
+
+Nhật ký
+	•	Model extapi.log:
+	•	endpoint, method, request_meta (IP, headers safe), params (truncated), status_code, error_message, duration_ms, created_at
+	•	Menu Logs kèm bộ lọc theo thời gian/endpoint/status.
+
+Controller
+	•	Một controller nhận route gốc: /ext/<path:endpoint>
+	•	Tra trong extapi.endpoint.route khớp endpoint (case-insensitive).
+	•	Kiểm tra enabled, method.
+	•	Auth:
+	•	api_key: so sánh header X-Api-Key với giá trị cấu hình (extapi.api_key trong ir.config_parameter). 401 nếu sai.
+	•	CSRF: csrf=False cho public routes; tuyệt đối không lộ session.
+	•	Thực thi:
+	•	Nếu mode=sql:
+	•	Chỉ parameterized SQL (cursor.execute(sql, params_dict)), không string-format trực tiếp.
+	•	read_only chặn INSERT/UPDATE/DELETE và DDL (validate bằng regex/cú pháp đơn giản).
+	•	Map input:
+	•	GET: từ request.params
+	•	POST/PATCH/DELETE: nếu Content-Type: application/json, đọc body JSON; nếu form, dùng params.
+	•	Nếu mode=orm:
+	•	Chỉ cho read (search_read) với fields/limit/order đã khai báo.
+	•	Domain placeholders :param thay bằng params nhận từ request.
+	•	Trả về:
+	•	JSON: { "data": [...], "count": N, "page": P } nếu paginate.
+	•	Raw: text/plain.
+	•	Lỗi: JSON { "error": { "code": ..., "message": ... } } với HTTP status phù hợp (400/401/404/405/500).
+	•	Log tất cả request/response (truncated body để an toàn).
+
+API Tester (wizard)
+	•	Nút “Test API” trên form extapi.endpoint mở wizard:
+	•	Cho nhập method, query/body (JSON), headers (JSON), path params (nếu cần).
+	•	Bấm Run → gọi thẳng controller nội bộ (bỏ rate-limit), hiển thị:
+	•	Request summary
+	•	Status code
+	•	Response body (pretty JSON)
+	•	Duration ms
+	•	Nút Copy cURL sinh lệnh cURL tương ứng (kèm X-Api-Key nếu cần).
+
+⸻
+
+Bảo mật & an toàn
+	•	Nhóm quyền: group_extapi_admin (Settings/Technical). Chỉ nhóm này thấy Settings, API Builder, Logs, Schema.
+	•	Validate route: chỉ cho pattern [a-z0-9/_-]+, normalize về không leading/trailing slash.
+	•	Chặn N+1 lỗi hiển nhiên. Limit page_size tối đa 1000.
+	•	Tách lỗi kỹ thuật (500) vs lỗi người dùng cấu hình sai (400/422).
+	•	Không log secrets (password, api_key, pem raw).
+
+⸻
+
+Giao diện (Views)
+	•	Settings: trong res.config.settings tab riêng “External DB (AWS/EC2)”
+	•	Field + nút “Test Connection”
+	•	Database:
+	•	Menu: External Database → Schema Browser
+	•	Tree left: schemas/tables (TreeView đơn giản)
+	•	Right pane: list columns (kanban/list) với badges: PK, FK, Nullable
+	•	API Builder:
+	•	Menu: External API → Endpoints (kanban + list + form)
+	•	Form có tabs:
+	•	General (name, route, method, auth, enabled, response)
+	•	Data Source (mode SQL/ORM + fields liên quan)
+	•	Pagination/Headers/Examples
+	•	Logs (one2many readonly)
+	•	Button: Test API (opens wizard)
+	•	Logs: External API → Logs
+
+⸻
+
+Cấu trúc module & files:
+
+    isd_api_builder/
+        __init__.py
+        __manifest__.py
+        security/
+            ir.model.access.csv
+            security.xml
+        models/
+            __init__.py
+            settings.py          # res.config.settings + storage ir.config_parameter
+            schema_cache.py      # cache schema
+            endpoint.py          # extapi.endpoint
+            log.py               # extapi.log
+            services.py          # ExtDBClient, SSHTunnelManager
+        controllers/
+            __init__.py
+            api_router.py        # /ext/<path:endpoint>
+        wizards/
+            __init__.py
+            test_api_wizard.py
+        views/
+            menuitems.xml
+            settings_view.xml
+            schema_views.xml
+            endpoint_views.xml
+            log_views.xml
+            test_api_wizard_views.xml
+        data/
+            ir_config_params.xml # default params (e.g., empty api key)
+        README.md
+
+	•	__manifest__.py
+	•	name, version, depends: ['base', 'web']
+	•	data: tất cả xml ở trên theo đúng thứ tự
+	•	external_dependencies như đã nêu
+	•	security.xml:
+	•	group group_extapi_admin
+	•	record rules chặt chẽ
+	•	ir.model.access.csv: quyền read/write phù hợp cho admin group, no access cho public
+
+⸻
+
+Acceptance criteria (bắt buộc)
+	1.	Cài module → xuất hiện menu và settings như mô tả.
+	2.	Test Connection hoạt động cho cả direct và ssh_tunnel (dùng pem upload).
+	3.	Schema Browser hiển thị được danh sách tables & columns với PK/FK/nullable/type.
+	4.	Tạo một endpoint:
+	•	ORM: model res.partner, domain theo param country_id, fields name,email, GET → trả JSON list đúng, có phân trang.
+	•	SQL: ví dụ SELECT id, name FROM res_partner WHERE email ILIKE %(email)s LIMIT %(limit)s; → GET với ?email=%@gmail.com&limit=5 trả JSON list đúng, không lỗi SQL injection.
+	5.	Controller /ext/<path> match đúng endpoint, enforce method & auth (api_key).
+	6.	API Tester wizard gọi được, trả kết quả và sinh cURL.
+	7.	Logs ghi lại mỗi request với duration & status.
+	8.	Tắt extdb_enable → menu External Database ẩn; API vẫn chạy nếu không phụ thuộc DB ngoài (ORM trong Odoo local). Nếu endpoint ở sql mà kết nối ngoài tắt, trả 503 với thông báo rõ ràng.
+	9.	Code chuẩn PEP8, tách lớp service, xử lý exceptions rõ ràng.
+
+⸻
+
+Lưu ý triển khai
+	•	Quản lý vòng đời tunnel bằng context manager để tránh rò rỉ.
+	•	Với PEM: lưu trong ir.attachment (private), lúc mở tunnel ghi ra file tạm (chmod 600), xong xóa.
+	•	Validate sql_text:
+	•	Nếu read_only, không cho chứa từ khóa BEGIN/COMMIT/INSERT/UPDATE/DELETE/CREATE/ALTER/DROP/TRUNCATE; case-insensitive.
+	•	Chuẩn hóa input:
+	•	Body JSON → dict
+	•	Query params → dict
+	•	Param schema optional: nếu có, validate kiểu (string/int/float/bool/list).
+	•	Trả lỗi JSON thống nhất:
+	•	400: invalid params
+	•	401: auth fail
+	•	404: endpoint not found/disabled
+	•	405: method not allowed
+	•	409: constraint conflict (nếu write mode được bật và xảy ra)
+	•	500: unexpected
+	•	503: external DB unavailable
+
+⸻
+
+Output yêu cầu
+	•	In ra toàn bộ mã nguồn module isd_api_builder theo cấu trúc trên (từng file đầy đủ nội dung).
+	•	Kèm README.md hướng dẫn cài đặt:
+	•	pip install psycopg2-binary paramiko sshtunnel
+	•	Cài app qua Apps, cấu hình Settings, Test Connection.
+	•	Tạo API, Test API, ví dụ cURL.
+	•	Không giải thích lan man. Chỉ code + hướng dẫn ngắn gọn.

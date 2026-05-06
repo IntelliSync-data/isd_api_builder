@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- API Generator Wizard Form View -->
+        <record id="view_extapi_generator_wizard_form" model="ir.ui.view">
+            <field name="name">extapi.generator.wizard.form</field>
+            <field name="model">extapi.generator.wizard</field>
+            <field name="arch" type="xml">
+                <form string="API Generator">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" placeholder="e.g., Photo App API"/>
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group string="Basic Information">
+                                <field name="route_prefix" placeholder="api/photoapp"/>
+                                <field name="schema_name"/>
+                                <field name="table_name" placeholder="photoapps"/>
+                                <field name="column_count" readonly="1"/>
+                            </group>
+                            <group string="Authentication">
+                                <field name="auth_mode" widget="radio"/>
+                                <field name="api_key" password="True" placeholder="Leave empty to auto-generate" invisible="auth_mode != 'api_key'"/>
+                            </group>
+                        </group>
+
+                        <group string="Options">
+                            <group>
+                                <field name="enable_logging"/>
+                                <field name="enable_pagination"/>
+                                <field name="default_page_size" invisible="not enable_pagination"/>
+                            </group>
+                            <group string="Generate Endpoints">
+                                <field name="generate_search_read"/>
+                                <field name="generate_read"/>
+                                <field name="generate_create"/>
+                                <field name="generate_update"/>
+                                <field name="generate_delete"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Detected Columns" name="columns">
+                                <field name="table_columns" widget="ace" options="{'mode': 'json', 'minLines': 15, 'maxLines': 30}" readonly="1"/>
+                                <div class="alert alert-info" role="alert" invisible="table_columns">
+                                    <strong>No columns detected.</strong>
+                                    <br/>
+                                    Please ensure:
+                                    <ul>
+                                        <li>External database connection is configured and working</li>
+                                        <li>Schema and table names are correct</li>
+                                        <li>Table exists in the external database</li>
+                                        <li>You have refreshed the schema cache</li>
+                                    </ul>
+                                </div>
+                            </page>
+                            <page string="Generated Endpoints" name="info">
+                                <div class="alert alert-success" role="alert">
+                                    <h4>What will be generated?</h4>
+                                    <p>Based on your selections, the following Odoo-compatible REST API endpoints will be created:</p>
+                                    <ul>
+                                        <li invisible="not generate_search_read">
+                                            <strong>POST /ext/<field name="route_prefix" readonly="1"/></strong> - Search &amp; Read with domain filtering
+                                        </li>
+                                        <li invisible="not generate_read">
+                                            <strong>GET /ext/<field name="route_prefix" readonly="1"/>/:id</strong> - Read single record by ID
+                                        </li>
+                                        <li invisible="not generate_create">
+                                            <strong>POST /ext/<field name="route_prefix" readonly="1"/>/create</strong> - Create new record
+                                        </li>
+                                        <li invisible="not generate_update">
+                                            <strong>PUT /ext/<field name="route_prefix" readonly="1"/>/:id</strong> - Update existing record
+                                        </li>
+                                        <li invisible="not generate_delete">
+                                            <strong>DELETE /ext/<field name="route_prefix" readonly="1"/>/:id</strong> - Delete record
+                                        </li>
+                                    </ul>
+                                    <hr/>
+                                    <h5>Request/Response Format</h5>
+                                    <p>All endpoints follow Odoo 18 JSON-RPC standard format:</p>
+                                    <pre>
+Request:  {"params": {"domain": [...], "fields": [...], "limit": 80}}
+Response: {"jsonrpc": "2.0", "result": {"records": [...], "length": 10}}
+                                    </pre>
+                                </div>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <footer>
+                        <button name="action_generate_apis" string="Generate APIs" type="object" class="btn-primary" icon="fa-magic"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- API Generator Action -->
+        <record id="action_extapi_generator_wizard" model="ir.actions.act_window">
+            <field name="name">API Generator</field>
+            <field name="res_model">extapi.generator.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem
+            id="menu_extapi_generator"
+            name="API Generator"
+            parent="menu_extapi"
+            sequence="5"
+            action="action_extapi_generator_wizard"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+    </data>
+</odoo>

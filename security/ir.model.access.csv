@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_extdb_schema_cache_admin,access_extdb_schema_cache_admin,model_extdb_schema_cache,group_extapi_admin,1,1,1,1
+access_extapi_endpoint_admin,access_extapi_endpoint_admin,model_extapi_endpoint,group_extapi_admin,1,1,1,1
+access_extapi_log_admin,access_extapi_log_admin,model_extapi_log,group_extapi_admin,1,1,1,1
+access_extapi_test_wizard_admin,access_extapi_test_wizard_admin,model_extapi_test_wizard,group_extapi_admin,1,1,1,1
+access_extapi_generator_wizard_admin,access_extapi_generator_wizard_admin,model_extapi_generator_wizard,group_extapi_admin,1,1,1,1

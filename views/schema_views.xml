@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Schema Cache Tree View -->
+        <record id="view_extdb_schema_cache_tree" model="ir.ui.view">
+            <field name="name">extdb.schema.cache.tree</field>
+            <field name="model">extdb.schema.cache</field>
+            <field name="arch" type="xml">
+                <list string="Database Schema Cache" create="false">
+                    <header>
+                        <button name="refresh_all_schemas" string="Refresh All Schemas" type="object" class="btn-primary" icon="fa-refresh"/>
+                    </header>
+                    <field name="schema_name"/>
+                    <field name="table_name"/>
+                    <field name="cached_at"/>
+                    <button
+                        name="action_refresh_table"
+                        string="Refresh"
+                        type="object"
+                        icon="fa-refresh"
+                        class="btn-link"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Schema Cache Form View -->
+        <record id="view_extdb_schema_cache_form" model="ir.ui.view">
+            <field name="name">extdb.schema.cache.form</field>
+            <field name="model">extdb.schema.cache</field>
+            <field name="arch" type="xml">
+                <form string="Schema Cache" create="false" delete="false">
+                    <header>
+                        <button
+                            name="action_refresh_table"
+                            string="Refresh"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-refresh"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="schema_name" readonly="1"/>
+                                <field name="table_name" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="cached_at" readonly="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Columns" name="columns">
+                                <field name="column_data_html" nolabel="1" readonly="1"/>
+                            </page>
+                            <page string="Raw JSON" name="raw_json">
+                                <field name="column_data" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Schema Cache Search View -->
+        <record id="view_extdb_schema_cache_search" model="ir.ui.view">
+            <field name="name">extdb.schema.cache.search</field>
+            <field name="model">extdb.schema.cache</field>
+            <field name="arch" type="xml">
+                <search string="Search Schema Cache">
+                    <field name="schema_name"/>
+                    <field name="table_name"/>
+                    <filter string="Public Schema" name="public_schema" domain="[('schema_name', '=', 'public')]"/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_schema" string="Schema" context="{'group_by': 'schema_name'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Schema Cache Action -->
+        <record id="action_extdb_schema_cache" model="ir.actions.act_window">
+            <field name="name">Schema Browser</field>
+            <field name="res_model">extdb.schema.cache</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_public_schema': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No schema data cached yet
+                </p>
+                <p>
+                    Click "Refresh All Schemas" to load database schema information.
+                </p>
+            </field>
+        </record>
+
+        <!-- Add default order to tree view -->
+        <record id="view_extdb_schema_cache_tree_buttons" model="ir.ui.view">
+            <field name="name">extdb.schema.cache.tree.buttons</field>
+            <field name="model">extdb.schema.cache</field>
+            <field name="inherit_id" ref="view_extdb_schema_cache_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list" position="attributes">
+                    <attribute name="default_order">schema_name, table_name</attribute>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

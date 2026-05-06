@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Root Menu -->
+        <menuitem
+            id="menu_extapi_root"
+            name="External API"
+            sequence="100"
+            web_icon="isd_api_builder,static/description/icon.png"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+        <!-- External Database Menu -->
+        <menuitem
+            id="menu_extdb"
+            name="External Database"
+            parent="menu_extapi_root"
+            sequence="20"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+        <!-- Schema Browser -->
+        <menuitem
+            id="menu_extdb_schema_cache"
+            name="Schema Browser"
+            parent="menu_extdb"
+            sequence="1"
+            action="action_extdb_schema_cache"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+        <!-- External API Menu -->
+        <menuitem
+            id="menu_extapi"
+            name="API Builder"
+            parent="menu_extapi_root"
+            sequence="30"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+        <!-- Endpoints -->
+        <menuitem
+            id="menu_extapi_endpoint"
+            name="Endpoints"
+            parent="menu_extapi"
+            sequence="1"
+            action="action_extapi_endpoint"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+        <!-- API Logs -->
+        <menuitem
+            id="menu_extapi_log"
+            name="API Logs"
+            parent="menu_extapi"
+            sequence="2"
+            action="action_extapi_log"
+            groups="isd_api_builder.group_extapi_admin"/>
+
+    </data>
+</odoo>

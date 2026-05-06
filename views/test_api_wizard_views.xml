@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Test API Wizard Form View -->
+        <record id="view_extapi_test_wizard_form" model="ir.ui.view">
+            <field name="name">extapi.test.wizard.form</field>
+            <field name="model">extapi.test.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Test API Endpoint">
+                    <sheet>
+                        <group>
+                            <group string="Endpoint Information">
+                                <field name="endpoint_id" readonly="1"/>
+                                <field name="route" readonly="1"/>
+                                <field name="method" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Request Parameters" name="parameters">
+                                <group>
+                                    <group string="Query Parameters (JSON)">
+                                        <field name="query_params" nolabel="1" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" placeholder='{"page": 1, "page_size": 10}'/>
+                                    </group>
+                                </group>
+
+                                <group invisible="method not in ['POST', 'PUT', 'PATCH']" string="Request Body (JSON)">
+                                    <field name="body_json" nolabel="1" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" placeholder='{"key": "value"}'/>
+                                </group>
+
+                                <group string="Additional Headers (JSON)">
+                                    <field name="headers_json" nolabel="1" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}" placeholder='{"X-Custom-Header": "value"}'/>
+                                </group>
+
+                                <separator string="Parameters Preview"/>
+                                <field name="test_params" readonly="1" nolabel="1"/>
+                            </page>
+
+                            <page string="Response" name="response">
+                                <group>
+                                    <group>
+                                        <field name="status_code" readonly="1"/>
+                                        <field name="duration_ms" readonly="1"/>
+                                    </group>
+                                </group>
+                                <separator string="Response Body"/>
+                                <field name="response_body" readonly="1" nolabel="1" widget="ace" options="{'mode': 'json', 'minLines': 10, 'maxLines': 25}"/>
+                            </page>
+
+                            <page string="cURL Command" name="curl">
+                                <div class="alert alert-info" role="alert">
+                                    Copy and use this cURL command to test the API from command line or other tools.
+                                </div>
+                                <field name="curl_command" readonly="1" nolabel="1" widget="ace" options="{'mode': 'sh'}"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+
+                    <footer>
+                        <button
+                            name="action_run_test"
+                            string="Run Test"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-play"/>
+                        <button
+                            name="action_copy_curl"
+                            string="Copy cURL"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-copy"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Test API Wizard Action -->
+        <record id="action_extapi_test_wizard" model="ir.actions.act_window">
+            <field name="name">Test API Endpoint</field>
+            <field name="res_model">extapi.test.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

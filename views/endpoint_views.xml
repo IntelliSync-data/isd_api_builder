@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Endpoint Kanban View -->
+        <record id="view_extapi_endpoint_kanban" model="ir.ui.view">
+            <field name="name">extapi.endpoint.kanban</field>
+            <field name="model">extapi.endpoint</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile">
+                    <field name="name"/>
+                    <field name="route"/>
+                    <field name="method"/>
+                    <field name="active"/>
+                    <field name="mode"/>
+                    <field name="auth_mode"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <span class="badge badge-pill" t-attf-class="badge-#{record.method.raw_value == 'GET' ? 'info' : record.method.raw_value == 'POST' ? 'success' : 'warning'}">
+                                                <field name="method"/>
+                                            </span>
+                                            <field name="route"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span class="badge badge-secondary">
+                                            <i class="fa fa-database"/> <field name="mode"/>
+                                        </span>
+                                        <span class="badge badge-info" t-if="record.auth_mode.raw_value == 'api_key'">
+                                            <i class="fa fa-key"/> API Key
+                                        </span>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="active" widget="boolean_toggle"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <!-- Endpoint Tree View -->
+        <record id="view_extapi_endpoint_tree" model="ir.ui.view">
+            <field name="name">extapi.endpoint.tree</field>
+            <field name="model">extapi.endpoint</field>
+            <field name="arch" type="xml">
+                <list string="API Endpoints">
+                    <field name="name"/>
+                    <field name="route"/>
+                    <field name="method" decoration-info="method == 'GET'" decoration-success="method == 'POST'"/>
+                    <field name="mode"/>
+                    <field name="auth_mode"/>
+                    <field name="active" widget="boolean_toggle"/>
+                    <field name="request_count"/>
+                    <field name="avg_duration_ms" string="Avg Duration (ms)"/>
+                    <button
+                        name="action_test_api"
+                        string="Test"
+                        type="object"
+                        icon="fa-play"
+                        class="btn-link"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Endpoint Form View -->
+        <record id="view_extapi_endpoint_form" model="ir.ui.view">
+            <field name="name">extapi.endpoint.form</field>
+            <field name="model">extapi.endpoint</field>
+            <field name="arch" type="xml">
+                <form string="API Endpoint">
+                    <header>
+                        <button
+                            name="action_test_api"
+                            string="Test API"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-play"/>
+                        <button
+                            name="action_open_logs"
+                            string="View Logs"
+                            type="object"
+                            class="btn-secondary"
+                            icon="fa-list"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" placeholder="e.g., Get Customers"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group string="Endpoint Configuration">
+                                <field name="route" placeholder="e.g., /customers or /orders/:id"/>
+                                <field name="method"/>
+                                <field name="description"/>
+                            </group>
+                            <group string="Statistics">
+                                <field name="request_count"/>
+                                <field name="avg_duration_ms"/>
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <!-- Authentication Tab -->
+                            <page string="Authentication" name="authentication">
+                                <group>
+                                    <field name="auth_mode" widget="radio"/>
+                                    <field name="api_key" password="True" invisible="auth_mode != 'api_key'" required="auth_mode == 'api_key'"/>
+                                </group>
+                            </page>
+
+                            <!-- Execution Tab -->
+                            <page string="Execution" name="execution">
+                                <group>
+                                    <field name="mode" widget="radio"/>
+                                </group>
+
+                                <!-- SQL Mode -->
+                                <group invisible="mode != 'sql'" string="SQL Query">
+                                    <div>
+                                        <div>
+                                            <field name="sql_text" nolabel="1" widget="ace" options="{'mode': 'sql', 'minLines': 15, 'maxLines': 30}" required="mode == 'sql'"/>
+                                        </div>
+                                        <div class="alert alert-info" role="alert">
+                                            <strong>Parameter Syntax:</strong> Use %%(param_name)s for parameters.
+                                            <br/>
+                                            Example: SELECT * FROM users WHERE id = %%(id)s AND status = %%(status)s
+                                            <br/>
+                                            Parameters can come from URL path (/users/:id), query string (?status=active), or request body.
+                                        </div>
+                                    </div>
+                                </group>
+
+                                <!-- ORM Mode -->
+                                <group invisible="mode != 'orm'" string="ORM Configuration">
+                                    <group>
+                                        <field name="orm_model" placeholder="e.g., res.partner" required="mode == 'orm'"/>
+                                    </group>
+                                    <group>
+                                        <field name="orm_domain_json" widget="ace" options="{'mode': 'json', 'minLines': 8, 'maxLines': 20}" required="mode == 'orm'"/>
+                                        <field name="orm_fields_json" widget="ace" options="{'mode': 'json', 'minLines': 8, 'maxLines': 20}" required="mode == 'orm'"/>
+                                    </group>
+                                    <div class="alert alert-info" role="alert">
+                                        <strong>Domain Example:</strong> [["customer_rank", "&gt;", 0], ["active", "=", true]]
+                                        <br/>
+                                        <strong>Fields Example:</strong> ["id", "name", "email", "phone"]
+                                        <br/>
+                                        Leave fields empty [] to return all fields.
+                                    </div>
+                                </group>
+                            </page>
+
+                            <!-- Response Configuration Tab -->
+                            <page string="Response" name="response">
+                                <group>
+                                    <group string="Response Format">
+                                        <field name="response_mode" widget="radio"/>
+                                    </group>
+                                    <group string="Pagination">
+                                        <field name="paginate"/>
+                                        <field name="page_size" invisible="not paginate" required="paginate"/>
+                                    </group>
+                                </group>
+                                <div class="alert alert-info" role="alert">
+                                    <strong>Pagination Parameters:</strong>
+                                    <br/>
+                                    Clients can use ?page=1&amp;page_size=20 query parameters to control pagination.
+                                    <br/>
+                                    <strong>Response Modes:</strong>
+                                    <br/>
+                                    - <strong>Data Only:</strong> Returns array of records directly
+                                    <br/>
+                                    - <strong>With Metadata:</strong> Returns {success, data, metadata} with pagination info
+                                </div>
+                            </page>
+
+                            <!-- Logging Tab -->
+                            <page string="Logging" name="logging">
+                                <group>
+                                    <field name="enable_logging"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Endpoint Search View -->
+        <record id="view_extapi_endpoint_search" model="ir.ui.view">
+            <field name="name">extapi.endpoint.search</field>
+            <field name="model">extapi.endpoint</field>
+            <field name="arch" type="xml">
+                <search string="Search Endpoints">
+                    <field name="name"/>
+                    <field name="route"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="SQL Mode" name="sql_mode" domain="[('mode', '=', 'sql')]"/>
+                    <filter string="ORM Mode" name="orm_mode" domain="[('mode', '=', 'orm')]"/>
+                    <separator/>
+                    <filter string="GET" name="method_get" domain="[('method', '=', 'GET')]"/>
+                    <filter string="POST" name="method_post" domain="[('method', '=', 'POST')]"/>
+                    <group expand="1" string="Group By">
+                        <filter name="group_by_method" string="Method" context="{'group_by': 'method'}"/>
+                        <filter name="group_by_mode" string="Mode" context="{'group_by': 'mode'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Endpoint Action -->
+        <record id="action_extapi_endpoint" model="ir.actions.act_window">
+            <field name="name">API Endpoints</field>
+            <field name="res_model">extapi.endpoint</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="context">{'search_default_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first API endpoint
+                </p>
+                <p>
+                    Build custom REST APIs to expose external database data or Odoo data.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

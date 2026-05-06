@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Configuration Parameters -->
+
+        <!-- External Database Enable -->
+        <record id="ir_config_parameter_extdb_enable" model="ir.config_parameter">
+            <field name="key">extdb.enable</field>
+            <field name="value">False</field>
+        </record>
+
+        <!-- Database Connection Mode -->
+        <record id="ir_config_parameter_db_conn_mode" model="ir.config_parameter">
+            <field name="key">extdb.db_conn_mode</field>
+            <field name="value">direct</field>
+        </record>
+
+        <!-- Database Host -->
+        <record id="ir_config_parameter_db_host" model="ir.config_parameter">
+            <field name="key">extdb.db_host</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- Database Port -->
+        <record id="ir_config_parameter_db_port" model="ir.config_parameter">
+            <field name="key">extdb.db_port</field>
+            <field name="value">5432</field>
+        </record>
+
+        <!-- Database Name -->
+        <record id="ir_config_parameter_db_name" model="ir.config_parameter">
+            <field name="key">extdb.db_name</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- Database User -->
+        <record id="ir_config_parameter_db_user" model="ir.config_parameter">
+            <field name="key">extdb.db_user</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- Database Password -->
+        <record id="ir_config_parameter_db_password" model="ir.config_parameter">
+            <field name="key">extdb.db_password</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- Database SSL Mode -->
+        <record id="ir_config_parameter_db_sslmode" model="ir.config_parameter">
+            <field name="key">extdb.db_sslmode</field>
+            <field name="value">prefer</field>
+        </record>
+
+        <!-- SSH Host -->
+        <record id="ir_config_parameter_ssh_host" model="ir.config_parameter">
+            <field name="key">extdb.ssh_host</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- SSH Port -->
+        <record id="ir_config_parameter_ssh_port" model="ir.config_parameter">
+            <field name="key">extdb.ssh_port</field>
+            <field name="value">22</field>
+        </record>
+
+        <!-- SSH User -->
+        <record id="ir_config_parameter_ssh_user" model="ir.config_parameter">
+            <field name="key">extdb.ssh_user</field>
+            <field name="value"></field>
+        </record>
+
+        <!-- SSH PEM Attachment ID -->
+        <record id="ir_config_parameter_ssh_pem_attachment_id" model="ir.config_parameter">
+            <field name="key">extdb.ssh_pem_attachment_id</field>
+            <field name="value"></field>
+        </record>
+
+    </data>
+</odoo>
