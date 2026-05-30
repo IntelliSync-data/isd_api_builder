@@ -31,8 +31,8 @@
         'views/endpoint_views.xml',
         'views/log_views.xml',
         'views/test_api_wizard_views.xml',
+        'views/menuitems.xml',
         'views/api_generator_wizard_views.xml',
-        'views/menuitems.xml',  # Load menus last
     ],
     'installable': True,
     'application': True,
