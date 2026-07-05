@@ -1,4 +1,4 @@
-name: Update ISD API Surveys Fishing VietNam
+name: Update ISD API Builder Fishing VietNam
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       
-    - name: Deploy isd_api_surveys to Server
+    - name: Deploy isd_api_builder to Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VFO_HOST }}
@@ -22,19 +22,19 @@ jobs:
         script_stop: true
         script: |
           # Clone if not exists, otherwise update
-          if [ ! -d ~/addons-system/isd_api_surveys ]; then
-            git clone git@github.com:IntelliSync-data/isd_api_surveys.git ~/addons-system/isd_api_surveys
-            cd ~/addons-system/isd_api_surveys && git checkout vfo
+          if [ ! -d ~/addons-system/isd_api_builder ]; then
+            git clone git@github.com:IntelliSync-data/isd_api_builder.git ~/addons-system/isd_api_builder
+            cd ~/addons-system/isd_api_builder && git checkout vfo
           else
-            cd ~/addons-system/isd_api_surveys
+            cd ~/addons-system/isd_api_builder
             git fetch origin && git reset --hard origin/vfo
           fi
           
-          # Sync isd_api_surveys directory with rsync (including deletions)
-          sudo mkdir -p /opt/custom-addons/isd_api_surveys
-          sudo rsync -av --delete ~/addons-system/isd_api_surveys/ /opt/custom-addons/isd_api_surveys/
+          # Sync isd_api_builder directory with rsync (including deletions)
+          sudo mkdir -p /opt/custom-addons/isd_api_builder
+          sudo rsync -av --delete ~/addons-system/isd_api_builder/ /opt/custom-addons/isd_api_builder/
 
-    - name: Update isd_api_surveys Module
+    - name: Update isd_api_builder Module
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VFO_HOST }}
@@ -43,8 +43,8 @@ jobs:
         script: |
           echo "Updating apps list..."
           echo "env['ir.module.module'].update_list(); env.cr.commit()" | sudo -u odoo /opt/odoo-venv/bin/python /opt/odoo18/odoo-bin shell -c /etc/odoo/odoo.conf -d ${{ secrets.VFO_DB_NAME }} --no-http
-          echo "Updating isd_api_surveys module..."
-          sudo -u odoo /opt/odoo-venv/bin/python /opt/odoo18/odoo-bin -c /etc/odoo/odoo.conf -d ${{ secrets.VFO_DB_NAME }} -u isd_api_surveys --stop-after-init --no-http || \
+          echo "Updating isd_api_builder module..."
+          sudo -u odoo /opt/odoo-venv/bin/python /opt/odoo18/odoo-bin -c /etc/odoo/odoo.conf -d ${{ secrets.VFO_DB_NAME }} -u isd_api_builder --stop-after-init --no-http || \
             echo "Module not installed yet (now visible in Apps list), continuing..."
 
     - name: Restart Odoo Service
